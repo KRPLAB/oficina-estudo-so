@@ -5,6 +5,9 @@ static inline unsigned char inb(unsigned short port) {
     return result;
 }
 
+// Variável global que recebe o valor de ECX do loader
+extern unsigned int cpu_ecx_saved;
+
 static inline void outb(unsigned short port, unsigned char data) {
     asm volatile("outb %0, %1" : : "a" (data), "dN" (port));
 }
@@ -35,6 +38,33 @@ void myprintf(char* str) {
     }
 }
 
+void serial_print_hex(unsigned int value) {
+    char hex_digits[] = "0123456789ABCDEF";
+    myprintf("0x");
+    for (int i = 7; i >= 0; i--) {
+        unsigned int digit = (value >> (i * 4)) & 0xF;
+        serial_putchar(hex_digits[digit]);
+    }
+}
+
+// Print number em decimal via serial
+void serial_print_dec(unsigned int n) {
+    unsigned int divisor = 1000000000;
+    int started = 0;
+    
+    while(divisor > 0) {
+        unsigned int digit = n / divisor;
+        if (digit > 0 || started) {
+            serial_putchar('0' + digit);
+            started = 1;
+        }
+        n = n % divisor;
+        divisor = divisor / 10;
+    }
+    
+    if (!started) serial_putchar('0');
+}
+
 // Delay simples (contagem de loops)
 void delay(unsigned int cycles) {
     for(unsigned int i = 0; i < cycles; i++) {
@@ -46,28 +76,22 @@ void kernel_main(void* multiboot_structure, unsigned int magicnumber) {
     serial_init();
     myprintf("Hello, World!\n");
     myprintf("Kernel is alive!\n");
+    myprintf("Magic number: ");
+    serial_print_hex(magicnumber);
+    myprintf("\n");
+    myprintf("ECX value: ");
+    serial_print_hex(cpu_ecx_saved);
+    myprintf("\n");
+    
+    myprintf("CAFEBABE em decimal: ");
+    serial_print_dec(cpu_ecx_saved);
+    myprintf("\n");
     
     unsigned int counter = 0;
     while(1) {
-        delay(10000000);  // Pequeno delay
-        myprintf("Heartbeat: ");
-        
-        // Printa contador em decimal simples
-        unsigned int n = counter;
-        unsigned int divisor = 1000000000;
-        int started = 0;
-        
-        while(divisor > 0) {
-            unsigned int digit = n / divisor;
-            if (digit > 0 || started) {
-                serial_putchar('0' + digit);
-                started = 1;
-            }
-            n = n % divisor;
-            divisor = divisor / 10;
-        }
-        
-        if (!started) serial_putchar('0');
+        delay(1000000000);  // Pequeno delay
+        myprintf("Counter: ");
+        serial_print_dec(counter);
         myprintf("\n");
         counter++;
     }

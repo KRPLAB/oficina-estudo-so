@@ -13,6 +13,8 @@
 
 loader:
     mov $kernel_stack, %esp
+    mov $0xCAFEBABE, %ecx
+    mov %ecx, cpu_ecx_saved   # Salva ECX em variável global
     push %eax
     push %ebx
     call kernel_main
@@ -24,7 +26,11 @@ _stop:
     jmp _stop
 
 
-
 .section .bss
 .space 2*1024*1024; # 2MiB
 kernel_stack:
+
+.section .data
+.global cpu_ecx_saved
+cpu_ecx_saved:
+    .long 0
