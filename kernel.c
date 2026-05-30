@@ -35,9 +35,40 @@ void myprintf(char* str) {
     }
 }
 
+// Delay simples (contagem de loops)
+void delay(unsigned int cycles) {
+    for(unsigned int i = 0; i < cycles; i++) {
+        asm volatile("nop");  // No operation
+    }
+}
+
 void kernel_main(void* multiboot_structure, unsigned int magicnumber) {
     serial_init();
     myprintf("Hello, World!\n");
-    myprintf("Kernel running...\n");
-    while(1);
+    myprintf("Kernel is alive!\n");
+    
+    unsigned int counter = 0;
+    while(1) {
+        delay(10000000);  // Pequeno delay
+        myprintf("Heartbeat: ");
+        
+        // Printa contador em decimal simples
+        unsigned int n = counter;
+        unsigned int divisor = 1000000000;
+        int started = 0;
+        
+        while(divisor > 0) {
+            unsigned int digit = n / divisor;
+            if (digit > 0 || started) {
+                serial_putchar('0' + digit);
+                started = 1;
+            }
+            n = n % divisor;
+            divisor = divisor / 10;
+        }
+        
+        if (!started) serial_putchar('0');
+        myprintf("\n");
+        counter++;
+    }
 }
