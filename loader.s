@@ -9,12 +9,14 @@
 
 .section .text
 .extern kernel_main
+.extern call_constructors
 .global loader
 
 loader:
     mov $kernel_stack, %esp
-    mov $0xCAFEBABE, %ecx
-    mov %ecx, cpu_ecx_saved   # Salva ECX em variável global
+
+    call call_constructors
+
     push %eax
     push %ebx
     call kernel_main
@@ -29,8 +31,3 @@ _stop:
 .section .bss
 .space 2*1024*1024; # 2MiB
 kernel_stack:
-
-.section .data
-.global cpu_ecx_saved
-cpu_ecx_saved:
-    .long 0
