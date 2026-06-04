@@ -100,6 +100,12 @@ void terminal_writestring(const char* data) {
 	terminal_write(data, strlen(data));
 }
 
+// void myprintf(char* str) {
+//     unsigned short* video_memory = (unsigned short*) 0xB8000;
+//     for(int i = 0; str[i] != '\0'; i++)
+//         video_memory[i] = (video_memory[i] & 0xFF00) | str[i]; 
+// }
+
 typedef void (*constructor)();
 
 extern constructor *start_ctors;
@@ -111,6 +117,7 @@ extern void call_constructors() {
 }
 
 void kernel_main(void *multiboot_structure, unsigned int magicnumber) {
+	// myprintf("Kernel is alive!\n");
 	/* Initialize terminal interface */
 	terminal_initialize();
 
