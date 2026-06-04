@@ -1,6 +1,4 @@
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include "include/types.h"
 
 /* 
  * From https://osdev.wiki/wiki/Multiboot1_Bare_Bones 2026-06-04 tutorial
@@ -51,7 +49,7 @@ size_t strlen(const char* str) {
 size_t terminal_row;
 size_t terminal_column;
 uint8_t terminal_color;
-uint16_t *terminal_buffer = (uint16_t*)VGA_MEMORY;
+static uint16_t *terminal_buffer = (uint16_t*)VGA_MEMORY;
 
 
 void terminal_initialize(void) {
@@ -116,7 +114,10 @@ extern void call_constructors() {
 		(*i)();
 }
 
-void kernel_main(void *multiboot_structure, unsigned int magicnumber) {
+extern void kernel_main(void *multiboot_structure, uint32_t /* magic_number */) {
+	(void) multiboot_structure;
+
+	call_constructors();
 	// myprintf("Kernel is alive!\n");
 	/* Initialize terminal interface */
 	terminal_initialize();
