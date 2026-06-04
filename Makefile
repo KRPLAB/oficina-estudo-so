@@ -21,7 +21,7 @@ install: mykernel.bin
 	sudo cp $< /boot/mykernel.bin
 
 clean:
-	rm -f $(objects) mykernel.bin
+	rm -f $(objects) mykernel.bin mykernel.iso
 
 mykernel.iso: mykernel.bin
 	mkdir -p iso/boot/grub
@@ -34,3 +34,7 @@ mykernel.iso: mykernel.bin
 	echo '}' >> iso/boot/grub/grub.cfg
 	grub-mkrescue --output=$@ iso
 	rm -rf iso
+
+run: mykernel.iso
+	(killall VirtualBoxVM && sleep 1) || true
+	VirtualBoxVM --startvm "myOS" --iso $<
