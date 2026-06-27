@@ -1,29 +1,45 @@
-CFLAGS = -m32 -nostdlib -fno-builtin -fno-leading-underscore
+CFLAGS = -m32 -nostdlib -fno-builtin -fno-leading-underscore \
+         -Iinclude
+
 CXXFLAGS = $(CFLAGS) -fno-use-cxa-atexit -fno-rtti -fno-exceptions
 ASPARAMS = --32
 LDPARAMS = -melf_i386
 
-objects = loader.o gdt.o kernel.o
+OBJDIR = build/obj
 
-%.o: %.c
+OBJECTS = \
+	$(OBJDIR)/loader.o \
+	$(OBJDIR)/gdt.o \
+	$(OBJDIR)/port.o \
+	$(OBJDIR)/kernel.o
+
+$(OBJDIR)/kernel.o: src/kernel.c
+	mkdir -p $(OBJDIR)
 	gcc $(CFLAGS) -c -o $@ $<
 
-%.o: %.cpp
+$(OBJDIR)/gdt.o: src/arch/x86/gdt.c
+	mkdir -p $(OBJDIR)
+	gcc $(CFLAGS) -c -o $@ $<
+
+$(OBJDIR)/port.o: src/arch/x86/port.cpp
+	mkdir -p $(OBJDIR)
 	g++ $(CXXFLAGS) -c -o $@ $<
 
-%.o: %.s
+$(OBJDIR)/loader.o: src/arch/x86/loader.s
+	mkdir -p $(OBJDIR)
 	as $(ASPARAMS) -o $@ $<
 
-mykernel.bin: linker.ld $(objects)
-	ld $(LDPARAMS) -T $< -o $@ $(objects)
+build/mykernel.bin: linker.ld $(OBJECTS)
+	mkdir -p build
+	ld $(LDPARAMS) -T $< -o $@ $(OBJECTS)
 
-install: mykernel.bin
+install: build/mykernel.bin
 	sudo cp $< /boot/mykernel.bin
 
 clean:
-	rm -f $(objects) mykernel.bin mykernel.iso
+	rm -rf build mykernel.iso iso
 
-mykernel.iso: mykernel.bin
+mykernel.iso: build/mykernel.bin
 	mkdir -p iso/boot/grub
 	cp $< iso/boot/
 	echo 'set timeout=0' > iso/boot/grub/grub.cfg
