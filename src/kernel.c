@@ -1,5 +1,5 @@
-#include "include/types.h"
-#include "include/gdt.h"
+#include <kernel/types.h>
+#include <kernel/gdt.h>
 
 /* 
  * From https://osdev.wiki/wiki/Multiboot1_Bare_Bones 2026-06-04 tutorial

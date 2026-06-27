@@ -1,4 +1,5 @@
-#include "include/gdt.h"
+#include <kernel/gdt.h>
+#include <kernel/types.h>
 
 // Criamos um array de 3 entradas (Null, Código, Dados)
 struct gdt_entry gdt[3];
