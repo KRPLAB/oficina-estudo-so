@@ -1,35 +1,43 @@
-/* Declare constants for the multiboot header. */
-.set ALIGN,    1<<0             /* align loaded modules on page boundaries */
-.set MEMINFO,  1<<1             /* provide memory map */
-.set FLAGS,    ALIGN | MEMINFO  /* this is the Multiboot 'flag' field */
-.set MAGIC,    0x1BADB002       /* 'magic number' lets bootloader find the header */
-.set CHECKSUM, -(MAGIC + FLAGS) /* checksum of above, to prove we are multiboot */
-
 /* 
-Declare a multiboot header that marks the program as a kernel. These are magic
-values that are documented in the multiboot standard. The bootloader will
-search for this signature in the first 8 KiB of the kernel file, aligned at a
-32-bit boundary. The signature is in its own section so the header can be
-forced to be within the first 8 KiB of the kernel file.
-*/
+ * Declaração de constantes para o cabeçalho Multiboot (Padrão Multiboot 1)
+ */
+.set ALIGN,    1<<0             /* Alinha módulos carregados em fronteiras de páginas */
+.set MEMINFO,  1<<1             /* Solicita ao bootloader o mapa de memória do sistema */
+.set FLAGS,    ALIGN | MEMINFO  /* Combinação de flags do Multiboot */
+.set MAGIC,    0x1BADB002       /* Número mágico que permite ao GRUB encontrar o cabeçalho */
+.set CHECKSUM, -(MAGIC + FLAGS) /* Checksum para validar a assinatura do cabeçalho */
+
+/*
+ * Cabeçalho Multiboot que identifica este programa como um kernel.
+ * Deve estar alinhado em 32 bits e localizado nos primeiros 8 KiB
+ * do arquivo para que o bootloader consiga encontrá-lo.
+ */
 .section .multiboot
 .align 4
     .long MAGIC
     .long FLAGS
     .long CHECKSUM
 
+/*
+ * Seção de Código Executável
+ */
 .section .text
 .extern kernel_main
 .extern call_constructors
 .global loader
+.global gdt_flush
 
+# Ponto de entrada do Kernel
 loader:
+    /* Configura o ponteiro de pilha (ESP) apontando para o topo seguro da stack */
     mov $kernel_stack, %esp
 
+    /* Executa os construtores globais do C++ antes de entrar no código principal */
     call call_constructors
 
     push %eax
     push %ebx
+
     call kernel_main
 
 
@@ -38,7 +46,33 @@ _stop:
     hlt
     jmp _stop
 
+gdt_flush:
+    # 1. Pega o paâmetro (ponteiro gb) passado pela função C
+    mov 4(%esp), %eax
+
+    # 2. Carrega o GDT usando o ponteiro
+    lgdt (%eax)
+
+    # 3. Recarrega os registradores de Dados (Segmento de dados = 0x10)
+    # 0x10 é o 3º segmento do GDT (Índice 2 * 8 bytes = 16 = 0x10)
+    mov $0x10, %ax
+    mov %ax, %ds
+    mov %ax, %es
+    mov %ax, %fs
+    mov %ax, %gs
+    mov %ax, %ss
+
+    # 4. Recarrega os registradores de Código (Segmento de código = 0x08)
+    # O registrador de CS não pode ser alterado com 'mov'. Exige um salto longo (far jump)
+    # 0x08 é o 1º segmento do GDT (Índice 1 * 8 bytes = 8 = 0x08)
+    jmp $0x08, $flush_cs
+
+flush_cs:
+    ret # Volta para o código em C
+
 
 .section .bss
-.space 2*1024*1024; # 2MiB
+.align 16
+stack_bottom:
+    .space 2*1024*1024; # 2MiB
 kernel_stack:
