@@ -1,4 +1,5 @@
 #include "include/types.h"
+#include "include/gdt.h"
 
 /* 
  * From https://osdev.wiki/wiki/Multiboot1_Bare_Bones 2026-06-04 tutorial
@@ -114,11 +115,14 @@ extern void call_constructors() {
 		(*i)();
 }
 
-extern void kernel_main(void *multiboot_structure, uint32_t /* magic_number */) {
+extern void kernel_main(void *multiboot_structure, uint32_t magic_number) {
 	(void) multiboot_structure;
+	(void) magic_number;
 
-	call_constructors();
+    init_gdt();
+	
 	// myprintf("Kernel is alive!\n");
+	
 	/* Initialize terminal interface */
 	terminal_initialize();
 
