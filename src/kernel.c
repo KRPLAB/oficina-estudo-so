@@ -1,5 +1,6 @@
 #include <kernel/gdt.h>
 #include <kernel/types.h>
+#include <kernel/interrupts.h>
 
 /*
  * From https://osdev.wiki/wiki/Multiboot1_Bare_Bones 2026-06-04 tutorial
@@ -140,29 +141,22 @@ extern void call_constructors() {
 		(*i)();
 }
 
+extern void init_interrupts(void);
+extern void enable_interrupts(void);
+
 extern void kernel_main(void *multiboot_structure, uint32_t magic_number) {
 	(void)multiboot_structure;
 	(void)magic_number;
 
 	init_gdt();
 
-	myprintf("Kernel is alive!\n");
-	myprintf("I implemented a simple terminal!\n");
+	myprintf("Kernel estah vivo!\n");
+	myprintf("Eu implementei uma simples terminal!\n");
 
+	myprintf("A partir daqui, o kernel estah pronto para lidar com interrupcoes!\n");
 
-	/* Initialize terminal interface */
-	// terminal_initialize();
+	init_interrupts();
+	enable_interrupts();
 
-	// terminal_writestring("Hello, The Kernel is alive!\n");
-	// terminal_writestring("I implemented a simple terminal!\n");
-	// terminal_writestring(
-	//     "This is a test of the terminal's ability to handle newlines.\n");
-	// terminal_writestring("The terminal should correctly move to the next line "
-	//                      "after each newline character.\n");
-	// terminal_writestring("If you see this text on separate lines, the terminal "
-	//                      "is working correctly!\n");
-	// terminal_writestring("This concludes the terminal test.\n");
-
-	while (1)
-		;
+	while (1);
 }

@@ -10,7 +10,8 @@ OBJDIR = build/obj
 OBJECTS = \
 	$(OBJDIR)/loader.o \
 	$(OBJDIR)/gdt.o \
-	$(OBJDIR)/port.o \
+	$(OBJDIR)/interrupts.o \
+	$(OBJDIR)/interruptstubs.o \
 	$(OBJDIR)/kernel.o
 
 $(OBJDIR)/kernel.o: src/kernel.c
@@ -21,9 +22,13 @@ $(OBJDIR)/gdt.o: src/arch/x86/gdt.c
 	mkdir -p $(OBJDIR)
 	gcc $(CFLAGS) -c -o $@ $<
 
-$(OBJDIR)/port.o: src/arch/x86/port.cpp
+$(OBJDIR)/interrupts.o: src/arch/x86/interrupts.c
 	mkdir -p $(OBJDIR)
-	g++ $(CXXFLAGS) -c -o $@ $<
+	gcc $(CFLAGS) -c -o $@ $<
+
+$(OBJDIR)/interruptstubs.o: src/arch/x86/interruptstubs.s
+	mkdir -p $(OBJDIR)
+	as $(ASPARAMS) -o $@ $<
 
 $(OBJDIR)/loader.o: src/arch/x86/loader.s
 	mkdir -p $(OBJDIR)
